@@ -9,8 +9,6 @@ const port = 3000;
 let clients = {};
 let global_id = 0;
 
-// All players ever seen while the server is running
-// { [userId]: { userId, score, top, left } }
 let players = {};
 
 server.ws("/ws", (client, req) => {
@@ -42,6 +40,7 @@ server.ws("/ws", (client, req) => {
         };
       }
 
+      // if score is sent with setUser, store it
       if (typeof msg.score === "number") {
         players[userId].score = msg.score;
       }

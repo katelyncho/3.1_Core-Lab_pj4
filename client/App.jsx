@@ -37,6 +37,22 @@ export function App() {
     setInputColor(e.target.value);
   }
 
+  function getCirclePositionFromId(id) {
+    if (!id) {
+      return { top: 50, left: 50 };
+    }
+    let sum1 = 0;
+    let sum2 = 0;
+    for (let i = 0; i < id.length; i++) {
+      const code = id.charCodeAt(i);
+      sum1 += code;
+      sum2 += code * (i + 1);
+    }
+    const top = 10 + (sum1 % 80);
+    const left = 10 + (sum2 % 80);
+    return { top, left };
+  }
+
   function handleTextChange(e) {
     setInputColor(e.target.value);
   }
@@ -128,9 +144,11 @@ export function App() {
         leaderboard.length > 0 &&
         leaderboard.map((p) => {
           const score = p.score || 0;
-          const size = 30 + score * 4; // grows with clicks
-          const top = typeof p.top === "number" ? p.top : 50;
-          const left = typeof p.left === "number" ? p.left : 50;
+          const size = 10 + score;
+
+          const pos = getCirclePositionFromId(p.userId);
+          const top = pos.top;
+          const left = pos.left;
 
           return (
             <div
