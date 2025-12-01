@@ -9,13 +9,13 @@ server.use(express.static("."));
 const port = 3000;
 
 let clients = {};
-let global_id = 0;
+let nextId = 1;
 
-server.ws("/ws", (client, req) => {
-  const id = global_id++;
-  clients[id] = { client: client, userId: null, score: 0 };
+server.ws("/ws", (ws, req) => {
+  const id = nextId++;
+  clients[id] = { ws: ws, userId: null, score: 0 };
 
-  client.on("message", (data) => {
+  ws.on("message", (data) => {
     let msg;
     try {
       msg = JSON.parse(data);
@@ -24,7 +24,9 @@ server.ws("/ws", (client, req) => {
     }
 
     if (msg.type === "setUser") {
-      clients[id].userId = msg.userId;
+      const userId = String(msg.userId || "").trim();
+      if (!userId) return;
+      clients[id].userId = userId;
       if (typeof msg.score === "number") {
         clients[id].score = msg.score;
       } else {
@@ -32,35 +34,49 @@ server.ws("/ws", (client, req) => {
       }
       sendLeaderboard();
     }
+
+    if (msg.type === "updateScore") {
+      if (typeof msg.score === "number") {
+        clients[id].score = msg.score;
+        sendLeaderboard();
+      }
+    }
   });
 
-  client.on("close", () => {
+  ws.on("close", () => {
     delete clients[id];
     sendLeaderboard();
   });
+
+  // send current leaderboard to this new client
+  sendLeaderboard();
 });
 
-function send(client, message) {
-  try {
-    client.send(JSON.stringify(message));
-  } catch (e) {}
-}
-
-function broadcast(message) {
-  for (let key in clients) {
-    send(clients[key].client, message);
-  }
-}
-
-function sendLeaderboard() {
+function getLeaderboard() {
   let players = [];
   for (let key in clients) {
-    let c = clients[key];
+    const c = clients[key];
     if (c.userId) {
       players.push({ userId: c.userId, score: c.score || 0 });
     }
   }
-  broadcast({ type: "leaderboard", players: players });
+  return players;
 }
 
-server.listen(port, "0.0.0.0", () => {});
+function sendLeaderboard() {
+  const message = JSON.stringify({
+    type: "leaderboard",
+    players: getLeaderboard(),
+  });
+
+  for (let key in clients) {
+    const c = clients[key];
+    try {
+      c.ws.send(message);
+    } catch (e) {}
+  }
+}
+
+server.listen(port, () => {
+  console.log("websocket server on port", port);
+});

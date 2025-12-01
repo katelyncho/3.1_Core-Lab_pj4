@@ -3,18 +3,14 @@ import { useState, useEffect } from "react";
 export function App() {
   const [userId, setUserId] = useState("");
   const [inputColor, setInputColor] = useState("#ff0000");
-  const [score, setScore] = useState(0);
   const [leaderboard, setLeaderboard] = useState([]);
   const [socket, setSocket] = useState(null);
 
   useEffect(() => {
-    const ws = new WebSocket("ws://localhost:3000/ws");
+    const host = window.location.hostname || "localhost";
+    const ws = new WebSocket("ws://" + host + ":3000/ws");
 
     setSocket(ws);
-
-    ws.onopen = () => {
-      // nothing here for now, we send setUser after user picks color
-    };
 
     ws.onmessage = (event) => {
       let msg;
@@ -23,15 +19,8 @@ export function App() {
       } catch (e) {
         return;
       }
-
       if (msg.type === "leaderboard" && Array.isArray(msg.players)) {
         setLeaderboard(msg.players);
-        if (userId) {
-          const mine = msg.players.find((p) => p.userId === userId);
-          if (mine && typeof mine.score === "number") {
-            setScore(mine.score);
-          }
-        }
       }
     };
 
@@ -42,7 +31,7 @@ export function App() {
     return () => {
       ws.close();
     };
-  }, [userId]); // userId here so it can sync score when it changes
+  }, []);
 
   function handleColorChange(e) {
     setInputColor(e.target.value);
@@ -63,12 +52,11 @@ export function App() {
     const ok = /^#[0-9a-f]{6}$/.test(hex) || /^#[0-9a-f]{3}$/.test(hex);
 
     if (!ok) {
-      alert("please enter a valid hex code like #ff00ff");
+      alert("please enter a valid hex code");
       return;
     }
 
     setUserId(hex);
-    setInputColor(hex);
 
     if (socket && socket.readyState === WebSocket.OPEN) {
       try {
@@ -83,17 +71,18 @@ export function App() {
     }
   }
 
-  let list = leaderboard;
-  if ((!list || list.length === 0) && userId) {
-    list = [{ userId: userId, score: score }];
-  }
+  const playersToShow =
+    leaderboard && leaderboard.length
+      ? leaderboard
+      : userId
+      ? [{ userId: userId, score: 0 }]
+      : [];
 
   return (
     <div className="page-container">
       {!userId && (
         <div className="id-box">
           <div>what&apos;s your color?</div>
-
           <div>
             <input
               type="color"
@@ -101,7 +90,6 @@ export function App() {
               onChange={handleColorChange}
             />
           </div>
-
           <div>
             <input
               type="text"
@@ -116,8 +104,8 @@ export function App() {
 
       {userId && (
         <div className="leaderboard-box">
-          {list && list.length > 0 ? (
-            list.map((p) => (
+          {playersToShow.length ? (
+            playersToShow.map((p) => (
               <div key={p.userId}>
                 {p.userId}: {p.score}
               </div>
