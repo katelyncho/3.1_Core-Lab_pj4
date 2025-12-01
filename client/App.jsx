@@ -68,7 +68,7 @@ export function App() {
     const ok = /^#[0-9a-f]{6}$/.test(hex) || /^#[0-9a-f]{3}$/.test(hex);
 
     if (!ok) {
-      alert("please enter a valid hex code like #ff00ff");
+      alert("please enter a valid hex code");
       return;
     }
 

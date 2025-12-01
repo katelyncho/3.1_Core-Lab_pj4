@@ -40,7 +40,6 @@ server.ws("/ws", (client, req) => {
         };
       }
 
-      // if score is sent with setUser, store it
       if (typeof msg.score === "number") {
         players[userId].score = msg.score;
       }
