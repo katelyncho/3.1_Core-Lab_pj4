@@ -72,6 +72,12 @@ export function App() {
       return;
     }
 
+    const taken = leaderboard && leaderboard.some((p) => p.userId === hex);
+    if (taken) {
+      alert("this hex code is already taken");
+      return;
+    }
+
     setUserId(hex);
 
     if (socket && socket.readyState === WebSocket.OPEN) {
