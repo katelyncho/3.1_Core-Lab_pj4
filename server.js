@@ -8,6 +8,9 @@ const port = 3000;
 
 let clients = {};
 let global_id = 0;
+
+// All players ever seen while the server is running
+// { [userId]: { userId, score, top, left } }
 let players = {};
 
 server.ws("/ws", (client, req) => {
@@ -29,8 +32,8 @@ server.ws("/ws", (client, req) => {
       clients[id].userId = userId;
 
       if (!players[userId]) {
-        const top = 10 + Math.random() * 70; // percent
-        const left = 10 + Math.random() * 70; // percent
+        const top = 5 + Math.random() * 90;
+        const left = 5 + Math.random() * 90;
         players[userId] = {
           userId: userId,
           score: 0,
@@ -51,8 +54,8 @@ server.ws("/ws", (client, req) => {
       if (!userId) return;
 
       if (!players[userId]) {
-        const top = 10 + Math.random() * 70;
-        const left = 10 + Math.random() * 70;
+        const top = 5 + Math.random() * 90;
+        const left = 5 + Math.random() * 90;
         players[userId] = {
           userId: userId,
           score: 0,
