@@ -74,7 +74,7 @@ export function App() {
 
     const taken = leaderboard && leaderboard.some((p) => p.userId === hex);
     if (taken) {
-      alert("this hex code is already taken");
+      alert("this color is already taken");
       return;
     }
 
