@@ -11,6 +11,7 @@ let global_id = 0;
 
 let players = {};
 
+// message about user information when server link opened
 server.ws("/ws", (client, req) => {
   const id = global_id++;
   clients[id] = { client: client, userId: null };
@@ -23,12 +24,14 @@ server.ws("/ws", (client, req) => {
       return;
     }
 
+    // userID
     if (msg.type === "setUser") {
       let userId = String(msg.userId || "").trim();
       if (!userId) return;
 
       clients[id].userId = userId;
 
+      // circle spawn position
       if (!players[userId]) {
         const top = 5 + Math.random() * 90;
         const left = 5 + Math.random() * 90;
@@ -40,6 +43,7 @@ server.ws("/ws", (client, req) => {
         };
       }
 
+      // score
       if (typeof msg.score === "number") {
         players[userId].score = msg.score;
       }
@@ -47,6 +51,7 @@ server.ws("/ws", (client, req) => {
       sendLeaderboard();
     }
 
+    // update score when page is clicked and the user exists
     if (msg.type === "updateScore") {
       const userId = clients[id].userId;
       if (!userId) return;
@@ -69,6 +74,7 @@ server.ws("/ws", (client, req) => {
     }
   });
 
+  // reset page when server is closed
   client.on("close", () => {
     delete clients[id];
     sendLeaderboard();
@@ -77,12 +83,14 @@ server.ws("/ws", (client, req) => {
   sendLeaderboard();
 });
 
+// send message to client
 function send(client, message) {
   try {
     client.send(JSON.stringify(message));
   } catch (e) {}
 }
 
+// send message to all clients the same
 function broadcast(message) {
   for (let key in clients) {
     send(clients[key].client, message);

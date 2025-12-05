@@ -6,12 +6,15 @@ export function App() {
   const [leaderboard, setLeaderboard] = useState([]);
   const [socket, setSocket] = useState(null);
 
+  // create websocket server
+  // create server link anywhere without putting ip address
   useEffect(() => {
     const host = window.location.hostname || "localhost";
     const ws = new WebSocket("ws://" + host + ":3000/ws");
 
     setSocket(ws);
 
+    // when server sends message update leaderboard
     ws.onmessage = (event) => {
       let msg;
       try {
@@ -24,6 +27,7 @@ export function App() {
       }
     };
 
+    // reset page when server closes
     ws.onclose = () => {
       setSocket(null);
     };
@@ -33,10 +37,17 @@ export function App() {
     };
   }, []);
 
+  // set userID with color input
   function handleColorChange(e) {
     setInputColor(e.target.value);
   }
 
+  // set userID with color hex code
+  function handleTextChange(e) {
+    setInputColor(e.target.value);
+  }
+
+  // spawn each circle on random position on the page depending on userID
   function getCirclePositionFromId(id) {
     if (!id) {
       return { top: 50, left: 50 };
@@ -53,10 +64,7 @@ export function App() {
     return { top, left };
   }
 
-  function handleTextChange(e) {
-    setInputColor(e.target.value);
-  }
-
+  // set userID with color hex code
   function handleSet() {
     let value = inputColor.trim();
     if (!value) return;
@@ -67,6 +75,7 @@ export function App() {
 
     const ok = /^#[0-9a-f]{6}$/.test(hex) || /^#[0-9a-f]{3}$/.test(hex);
 
+    // alert when same userID already exists or when invalid hex code is entered
     if (!ok) {
       alert("please enter a valid hex code");
       return;
@@ -80,6 +89,7 @@ export function App() {
 
     setUserId(hex);
 
+    // JSON messages about user information to server
     if (socket && socket.readyState === WebSocket.OPEN) {
       try {
         socket.send(
@@ -93,6 +103,7 @@ export function App() {
     }
   }
 
+  // increases user's score every time the user clicks the page
   function handlePageClick() {
     if (!userId) return;
 
@@ -112,7 +123,9 @@ export function App() {
     }
   }
 
+  // main page
   return (
+    // userID selection
     <div className="page-container" onClick={handlePageClick}>
       {!userId && (
         <div className="id-box">
@@ -136,6 +149,7 @@ export function App() {
         </div>
       )}
 
+      {/* leaderboard */}
       {leaderboard && leaderboard.length > 0 && (
         <div className="leaderboard-box">
           {leaderboard.map((p) => (
@@ -146,6 +160,7 @@ export function App() {
         </div>
       )}
 
+      {/* circles spawn and size change by click */}
       {leaderboard &&
         leaderboard.length > 0 &&
         leaderboard.map((p) => {
